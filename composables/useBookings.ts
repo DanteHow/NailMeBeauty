@@ -25,16 +25,29 @@ export const useBookings = () => {
         return docSnapShot.exists() ? { id: docSnapShot.id, } : null
     }
 
+    const getBookingByDate = async (date: string) => {
+
+    }
+
+    const fetchSlot = async () => {
+        const docRef = collection($firebase.firestoreDB, 'bookings')
+        const snapShot = await getDocs(docRef)
+        const dates = snapShot.docs.map(doc => doc.data().Date)
+        return dates
+    }
+
     //Create Booking and upload to database
     const createBooking = async (data: Record<string, any>) => {
         const docRef = collection($firebase.firestoreDB, 'bookings')
         const result = await addDoc(docRef, data)
         return result.id
     }
-    
+
     return {
         getAllBookings,
         getBookingById,
+        getBookingByDate,
+        fetchSlot,
         createBooking
     }
 }
