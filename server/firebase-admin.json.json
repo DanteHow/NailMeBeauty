@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "nailbeauty-156c9",
+  "private_key_id": "b9ef6ae89148b8a26258cbb16dde87b129cdce64",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC0AzXGJFoOSo2C\njANN5wrB2UaQqPfDk8s8OCuR2gXKlzId9oIsRAwFtSzWR0v2bu4yRtWnDQ/t57QU\n2jxKBj+SqFybXJ3Dbed/qAFXJ9i9d2qLBNGzUQPWRrXZcQVdRV1pd3fdtUORT5do\nGf2iYLUy4HPI3ybfeJ7RRr32/kjvojzHlWV0/WSUiBV1mE966dNQz/MPFXaO1TuS\n+ywkoPbEto0rT1YRRlN1NpUxQ+iRotPm/Yb2945wTY1/f+T2EWmHkTcQYQHVcprR\nNDBBtqaBAQzB/Jyu4j6TokVW75ZCgUWPXdh0b73aY+0owbWK8/eDa6rGNeC7t+7K\nSgro/SkRAgMBAAECggEACZ4gSeFYVGokTGTJqmhdOUUwEXuNnUvwsFt57HV/GLdi\nTJqGkvHhyI5JAnvVsal0nYgOUzoN71KRWwnb7cKOs/m91OkqXq4pD7d8ttjgqiLO\ntPXBdHiwIUsu3Rq+RCD4IDHrXBOatBFSEBRPalULaVf3p7RQgeESbzD95kvovrDP\n6BoGfRlkIv0HorbgdDgFcZSi5ubfv7HeLId28ayugaQuLwzPguRHaz0h3ffJImE3\nscUpViGiHwuvsReS+3VUO3d48UzGm5ORClyGVYYngw3oPJwnqBjlcuYuEh8Fnf7X\nBYudftjMBcwwA5dYlu5b6a1BrwSWB1lf1WpHn8p44QKBgQDasu5AVnlFXU6XkZfL\n4WM5F5f+IMEx9kpVfDjGWbAR7y+TFgnhulMOIa1pRixgZ1wdkmc9BipPYBeiFjW+\nqrQP3lH8WZeyCvg8Ih6WLIp8/t6qlCkXDeFsD7aTd88KqIUrf/un2FL9LEiFj0ED\nE4sFjkDT3+6KNCLssTEGn+fz+QKBgQDStxyXkPHFoFjGQNDxVUcqkyPQ2P86bad1\nW8Q6NUXDXKkF6QoL/qWaiVeYHbXiTK+fMQdicrkfSIVDyGNneI+1y+xmj56C+tQb\nD5+V6WqGDWGRMD8yHfvGNgLM3UGJqaua0V/+WTGiso0uE7gHgu3DfiEgNddBL5AY\nqxfYFZrz2QKBgDV4+ngQrKYhIk488viOq0wSUL96EsK8jYBJVzhoRXydFuzHvrLK\nc/RIl7XdyovnucYhPczV7RJrVFv1Qj7UTiJzIWiqH0URGZDaZtAhI9tcFeVvRHy2\nkB9z2BhGewEII0d3i3iGlAQDB9hgJm0yIhPBrGghoJl6Fe/5gxszjetBAoGAT0l/\nhLiRgN95CABTnruL78U18Nv2DbI9FLfW+mAZRA2VvBeYJDNJdQDA6Qgk7GYWnzv/\nn1ezuMW8/2hjnweKa8mzxlO8PWTMcvJKBkqyPobCc7NH1D/cARVJsHSAuKATZknq\naPZ+6s1sui3JTWpCtRC8vjYELQ8MlXurmS9oAuECgYBRsJ9/laMYL96ECJUOeJO6\nASnn9V164tv+byCTe0MvsOPH4duaqD2aUMC/h+gyK6uEB0BXa2714VEPCX/GtG9a\n/Va8gXnMXVLjRvZVbfe6nBPDFEdrso9zHpfEF9lwJUi1mejCOPxphEDPcHm7Cc1+\n26iElA1nCKsfcNY6x8t1Tg==\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@nailbeauty-156c9.iam.gserviceaccount.com",
+  "client_id": "111136714838155450080",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40nailbeauty-156c9.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
