@@ -1,4 +1,5 @@
-import { addDoc, collection, doc, getDoc, getDocs } from "firebase/firestore";
+import type dayjs from "dayjs";
+import { addDoc, collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 
 export const useBookings = () => {
     const { $firebase } = useNuxtApp()
@@ -25,15 +26,17 @@ export const useBookings = () => {
         return docSnapShot.exists() ? { id: docSnapShot.id, } : null
     }
 
-    const getBookingByDate = async (date: string) => {
-
+    const getBookingByDate = async (date: dayjs.Dayjs) => {
+        const q = query(collection($firebase.firestoreDB, 'bookings'), where("Date", "==", date.format('YYYY-MM-DD')))
+        const querySnapshot = await getDocs(q)
+        const fetchdata = querySnapshot.docs.map(doc => doc.data())
+        return fetchdata
     }
 
     const fetchSlot = async () => {
         const docRef = collection($firebase.firestoreDB, 'bookings')
         const snapShot = await getDocs(docRef)
-        const dates = snapShot.docs.map(doc => doc.data().Date)
-        return dates
+        return snapShot.docs.map(doc => doc.data().Date)
     }
 
     //Create Booking and upload to database
