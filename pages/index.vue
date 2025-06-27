@@ -160,7 +160,7 @@ import { z } from 'zod'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { FormField, FormItem, FormLabel, FormControl } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
-import { CalendarIcon } from 'lucide-vue-next'
+import { Book, CalendarIcon } from 'lucide-vue-next'
 import { Calendar } from '~/components/ui/calendar'
 import { Button } from '~/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover'
@@ -169,6 +169,8 @@ import { cn } from '~/lib/utils'
 import Default from '~/layout/default.vue'
 import Separator from '~/components/ui/separator/Separator.vue'
 import Checkbox from '~/components/ui/checkbox/Checkbox.vue'
+
+import { useBookings } from '../composables/useBookings'
 
 const df = new DateFormatter('en-US', {
   dateStyle: 'long',
@@ -186,8 +188,8 @@ const items = [
         label: 'Nail Remove'
     },
     {
-        id: 'prolong',
-        label: 'Nail Prolong'
+        id: 'extension',
+        label: 'Nail Extension'
     }
 ] as const
 
@@ -221,11 +223,18 @@ const value = computed({
 })
 
 const onSubmit = handleSubmit((values) => {
-  console.log(values.name + ' ' + values.contact)
-  console.log(values.dob)
-  console.log(values.BookingTime)
-  console.log(values.BodyPart)
-  console.log(values.items)
+    const { createBooking } = useBookings()
+    const BookingList: Record<string, any> = {
+       Name: values.name,
+       Contact: values.contact,
+       Date: values.dob,
+       Time: values.BookingTime,
+       BodyParts: values.BodyPart,
+       Requirement: values.items 
+    }
+    console.log(BookingList)
+    const SubmitStauts = createBooking(BookingList)
+    console.log("Submition Id: ", SubmitStauts)
 })
 
 </script>
