@@ -172,6 +172,8 @@ import Checkbox from '~/components/ui/checkbox/Checkbox.vue'
 
 import { useBookings } from '../composables/useBookings'
 
+const loading = ref(false)
+
 const df = new DateFormatter('en-US', {
   dateStyle: 'long',
 })
@@ -223,7 +225,7 @@ const value = computed({
 })
 
 const onSubmit = handleSubmit((values) => {
-    const { createBooking } = useBookings()
+    const { createBooking, refreshBookings } = useBookings()
     const BookingList: Record<string, any> = {
        Name: values.name,
        Contact: values.contact,
@@ -233,8 +235,23 @@ const onSubmit = handleSubmit((values) => {
        Requirement: values.items 
     }
     console.log(BookingList)
-    const SubmitStauts = createBooking(BookingList)
-    console.log("Submition Id: ", SubmitStauts)
+
+    // const SubmitStauts = createBooking(BookingList)
+    const SubmitStatus = async () => {
+        try {
+            loading.value = true
+            const result = await createBooking(BookingList)
+            console.log('Write Confirmed: ', result)
+            await refreshBookings()
+        } catch (error) {
+            console.error('Failed: ', error)
+        } finally {
+            loading.value = false
+        }
+    }
+
+    console.log("Submition Id: ", SubmitStatus)
+    
 })
 
 </script>

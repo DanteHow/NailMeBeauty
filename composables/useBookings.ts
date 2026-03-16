@@ -1,21 +1,38 @@
 import type dayjs from "dayjs";
 import { addDoc, collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 
+let loading = false
+
+export interface RawBooking {
+    id: string;
+    Name: string;
+    Date: any;
+    Contact: string;
+    Time: string;
+    BodyPart: string;
+    Requirement?: string
+}
+
+export interface TrasnformedBooking {
+    id: string;
+    name: string;
+    date: dayjs.Dayjs
+    contact: string;
+    time: string;
+    bodyPart: string;
+    requirement?: string
+}
+
 export const useBookings = () => {
     const { $firebase } = useNuxtApp()
 
-    const getAllBookings = async() => {
+    const getAllBookings = async(): Promise<RawBooking[]> => {
         const collectionRef = collection($firebase.firestoreDB, 'bookings')
         const querySnapshot = await getDocs(collectionRef)
 
         return querySnapshot.docs.map(doc => ({
             id: doc.id,
-            Name: doc.data().Name,
-            Date: doc.data().Date,
-            Contact: doc.data().Contact,
-            Time: doc.data().Time,
-            BodyParts: doc.data().BodyParts,
-            Requirement: doc.data().Requirement
+            ...doc.data() as Omit<RawBooking, 'id'>
         }))
     }
 
@@ -41,9 +58,33 @@ export const useBookings = () => {
 
     //Create Booking and upload to database
     const createBooking = async (data: Record<string, any>) => {
-        const docRef = collection($firebase.firestoreDB, 'bookings')
-        const result = await addDoc(docRef, data)
-        return result.id
+        try {
+            const docRef = collection($firebase.firestoreDB, 'bookings')
+            const result = await addDoc(docRef, data)
+            alert('Booking add with DocID')
+            return result.id
+        } catch (error) {
+            console.error('Error creating booking: ', error)
+            throw error
+        }
+    }
+
+    const refreshBookings = async () => {
+        try {
+            loading = true
+            const querySnapshot = await getDocs(collection($firebase.firestoreDB, 'bookings'))
+            const freshBookings = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }))
+            console.log(freshBookings)
+            return freshBookings
+        } catch (error) {
+            console.log('Refresh Error: ', error)
+            return false
+        } finally {
+            loading = false
+        }
     }
 
     return {
@@ -51,6 +92,19 @@ export const useBookings = () => {
         getBookingById,
         getBookingByDate,
         fetchSlot,
-        createBooking
+        createBooking,
+        refreshBookings
+    }
+}
+
+export const transformBooking = (booking: RawBooking): TrasnformedBooking => {
+    return {
+        id: booking.id,
+        name: booking.Name,
+        date: booking.Date,
+        contact: booking.Contact,
+        time: booking.Time,
+        bodyPart: booking.BodyPart,
+        requirement: booking.Requirement
     }
 }

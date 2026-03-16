@@ -7,7 +7,10 @@
             <button @click="nextMonth" class="text-sm px-2 py-1 border rounded-md">→</button>
         </div>
         <!-- HeaderControls::End -->
-
+        <div v-for="booking in bookings">
+            <div>Object: {{ booking }}</div>
+            <div>id: {{ booking.id }}</div>
+        </div>
         <!-- DaysOfWeek::Start -->
         <div class="grid grid-cols-7 text-center text-sm text-muted-foreground font-medium mb-2">
             <div v-for="(d, i) in 7" :key="i">
@@ -18,49 +21,50 @@
 
         <!-- MonthGrid::Start -->
         <Dialog>
-            <DialogTrigger as-child>
-                <div class="grid grid-cols-7 gap-px bg-border border rounded overflow-hidden text-sm">
-                    <Card
-                        v-for="day in daysInCalendar"
-                        :key="day.format('YYYY-MM-DD')"
-                        class="p-1 min-h-[80px] relative cursor-pointer hover:bg-muted flex flex-row justify-center items-center"
-                        :class="{
-                            'text-muted-foreground': !day.isSame(currentMonth, 'month'),
-                            'bg-primary/10 border-primary font-semibold': day.isSame(today, 'day')
-                        }"
-                        @click="selectDate(day)"
-                    >
-                        <CardContent>
-                            <div>
-                                <!-- DayNumber::Start -->
-                                <div class="absolute top-1 left-1 text-s">
-                                    {{ day.format('D') }}
+            <div class="grid grid-cols-7 gap-px bg-border border rounded overflow-hidden text-sm">
+                <Card
+                    v-for="day in daysInCalendar"
+                    :key="day.format('YYYY-MM-DD')"
+                    class="p-1 min-h-[80px] relative cursor-pointer hover:bg-muted flex flex-row justify-center items-center"
+                    :class="{
+                        'text-muted-foreground': !day.isSame(currentMonth, 'month'),
+                        'bg-primary/10 border-primary font-semibold': day.isSame(today, 'day')
+                    }"
+                >
+                    <DialogTrigger as-child>
+                        <div
+                            class="w-full h-full"
+                            @click="selectDate(day)"
+                        >
+                            <CardContent>
+                                <div>
+                                    <div>
+                                        {{ day.format('D') }}
+                                    </div>
+                                    <div
+                                        v-if="getBookingCount(day) > 0"
+                                        class="absolute bottom-1 right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center"
+                                    >
+                                        {{ getBookingCount(day) }}
+                                    </div>
                                 </div>
-                                <!-- DayNumber::End -->
-                                <!-- SlotHint::Start -->
-                                <div v-if="hasSlot(day)" class="font-medium text-sm text-center"> <!-- If Slot isNotEmpty: True else empty div -->
-                                    Booking: {{ slotDates.filter(count => count === day.format('YYYY-MM-DD')).length }}
-                                </div>
-                                <!-- SlotHint::Start -->
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            </DialogTrigger>
+                            </CardContent>
+                        </div>
+                    </DialogTrigger>
+                </Card>
+            </div>
+            
             <DialogContent class="sm:max-w-[425px] grid-rows-[auto_minmax(0,1fr)_auto] p-0 max-h-[90dvh]">
                 <DialogHeader class="p-6 pb-0">
                     <DialogTitle>
-                        DialogTitle
+                        Bookings for {{ selectedDate.format('MMMM D, YYYY') }}
                     </DialogTitle>
-                    <DialogDescription>
-                        This is the booking list description
-                    </DialogDescription>
                 </DialogHeader>
-                <div class="grid gap-4 py-4 overflow-y-auto px-6">
-                    <div v-for="weekday in daysInCalendar" class="flex flex-col justify-between">
-                        {{ weekday.format('YYYY-MM-DD') }}
-                    </div>
-                </div>
+                <DateDialog 
+                    v-if="selectedDate"
+                    :date="selectedDate"
+                    :bookings="selectedDateBookings"
+                />
                 <DialogFooter class="p-6 pt-0">
                     <DialogClose as-child>
                         <Button>Close</Button>
@@ -82,15 +86,35 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 import { useBookings } from '~/composables/useBookings'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter, DialogClose } from '~/components/ui/dialog'
 import { Button } from '~/components/ui/button'
-import { doc } from 'firebase/firestore'
+import DateDialog from '~/layout/DateDialog.vue'
 
 dayjs.extend(isToday)
 dayjs.extend(isSameOrBefore)
 dayjs.extend(isSameOrAfter)
 
+interface Booking {
+    id: string;
+    Name: string;
+    Date: any;
+    Contact: any;
+    Time: any;
+    BodyParts: any;
+    Requirement: any;
+}
+
+// ------ Firebase --------//
+const { getAllBookings, fetchSlot, getBookingByDate } = useBookings()
+const bookings = ref<Booking[]>([])
+
+onMounted( async () => {
+    const respone = await getAllBookings()
+    respone.forEach(list => console.log(list))
+})
+
 const today = dayjs()
 const currentMonth = ref(dayjs())
-const slotDates = ref<any[]>([])
+const selectedDate = ref(dayjs())
+const selectedDateBookings = ref<any[]>([])
 
 const daysInCalendar = computed(() => {
     const start = currentMonth.value.startOf('month').startOf('week')
@@ -107,8 +131,9 @@ const daysInCalendar = computed(() => {
 })
 
 const selectDate = async (day: dayjs.Dayjs) => {
-    const DialogList = await getBookingByDate(day)
-    DialogList.forEach(doc => console.log(doc.Time))
+    selectedDate.value = day
+    selectedDateBookings.value = await getBookingByDate(day)
+    selectedDateBookings.value.forEach(doc => console.log(doc))
 }
 
 const nextMonth = () => {
@@ -119,17 +144,21 @@ const prevMonth = () => {
     currentMonth.value = currentMonth.value.subtract(1, 'month')
 }
 
-const hasSlot = (day: dayjs.Dayjs) => {
-    return slotDates.value.includes(day.format('YYYY-MM-DD'))
-}
+const bookingsByDate = computed(() => {
+    const result: Record<string, number> = {}
+    if(!bookings.value) return result
 
-// ------ Firebase --------//
-const { getAllBookings, fetchSlot, getBookingByDate } = useBookings()
-const bookings = ref()
+    bookings.value.forEach((booking: Booking) => {
+        const dateKey = dayjs(booking.Date).format('YYYY-MM-DD')
+        result[dateKey] = (result[dateKey] || 0) + 1
+    })
 
-onMounted( async () => {
-    bookings.value = await getAllBookings()
-    slotDates.value = await fetchSlot()
+    return result
 })
+
+const getBookingCount = (day: dayjs.Dayjs) => {
+    const dateKey = day.format('YYYY-MM-DD')
+    return bookingsByDate.value[dateKey] || 0
+}
 
 </script>
