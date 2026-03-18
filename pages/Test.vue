@@ -1,46 +1,104 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
+import { ScheduleXCalendar } from '@schedule-x/vue'
 import {
-  Dialog,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogScrollContent,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-
-const TestClick = () => {
-    
+  createCalendar,
+  createViewDay,
+  createViewMonthAgenda,
+  createViewMonthGrid,
+  createViewWeek,
+  viewMonthGrid,
+} from '@schedule-x/calendar'
+import '@schedule-x/theme-default/dist/index.css'
+import 'temporal-polyfill/global'
+import { shallowRef } from 'vue'
+ 
+// ------ Router Navigation --------//
+const goToRouter = async (page: string) => {
+    await navigateTo(`${page}`, { external: true })
 }
-</script>
 
+// Do not use a ref here, as the calendar instance is not reactive, and doing so might cause issues
+// For updating events, use the events service plugin
+const calendarApp = shallowRef()
+
+onMounted(() => {
+  calendarApp.value = createCalendar({
+    selectedDate: Temporal.PlainDate.from('2025-12-19'),
+    views: [
+      createViewDay(),
+      createViewWeek(),
+      createViewMonthGrid(),
+      createViewMonthAgenda(),
+    ],
+    events: [
+      {
+        id: 1,
+        title: 'Event 1',
+        start: Temporal.PlainDate.from('2025-12-19'),
+        end: Temporal.PlainDate.from('2025-12-19'),
+      },
+      {
+        id: 1,
+        title: 'Event 1',
+        start: Temporal.PlainDate.from('2025-12-19'),
+        end: Temporal.PlainDate.from('2025-12-19'),
+      },
+      {
+        id: 1,
+        title: 'Event 1',
+        start: Temporal.PlainDate.from('2025-12-19'),
+        end: Temporal.PlainDate.from('2025-12-19'),
+      },
+      {
+        id: 1,
+        title: 'Event 1',
+        start: Temporal.PlainDate.from('2025-12-19'),
+        end: Temporal.PlainDate.from('2025-12-19'),
+      },
+    ],
+    locale: 'en-SG',
+    timezone: 'Asia/Singapore',
+    firstDayOfWeek: 1,
+    defaultView: viewMonthGrid.name,
+    dayBoundaries: {
+      start: '08:00',
+      end: '18:00',
+    },
+    minDate: Temporal.PlainDate.from('2024-01-01'),
+    maxDate: Temporal.PlainDate.from('2030-12-31'),
+    weekOptions: {
+      gridHeight: 2500,
+      nDays: 7,
+      eventWidth: 95,
+      timeAxisFormatOptions: {
+        hour: '2-digit',
+        minute: '2-digit',
+      },
+      eventOverlap: true,
+      gridStep: 30,
+    },
+  })
+})
+
+
+</script>
+ 
 <template>
-  <Dialog>
-    <DialogTrigger as-child>
-      <div
-        @click="TestClick"
-      >
-        Click This
-      </div>
-    </DialogTrigger>
-    <DialogScrollContent class="sm:max-w-[425px]">
-      <DialogHeader>
-        <DialogTitle>Modal title</DialogTitle>
-        <DialogDescription>
-          Here is modal with overlay scroll
-        </DialogDescription>
-      </DialogHeader>
-      <div class="grid gap-4 py-4 h-[300dvh]">
-        <p>
-          This is some placeholder content to show the scrolling behavior for modals. Instead of repeating the text in the modal, we use an inline style to set a minimum height, thereby extending the length of the overall modal and demonstrating the overflow scrolling. When content becomes longer than the height of the viewport, scrolling will move the modal as needed.
-        </p>
-      </div>
-      <DialogFooter>
-        <Button type="submit">
-          Save changes
-        </Button>
-      </DialogFooter>
-    </DialogScrollContent>
-  </Dialog>
+  <div>
+    <ClientOnly>
+      <ScheduleXCalendar 
+        :calendar-app="calendarApp"
+      />
+      <div class="m-2 p-2"><Button @click="goToRouter('/Admin')">Back To Admin Dashboard</Button></div>
+    </ClientOnly>
+  </div>
 </template>
+
+<style>
+.sx-vue-calendar-wrapper {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+}
+</style>

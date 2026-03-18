@@ -7,6 +7,19 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ['~/assets/css/tailwind.css'],
   vite: {
+    optimizeDeps: {
+      include: [
+        '@schedule-x/calendar',
+        '@vue/devtools-core',
+        '@vue/devtools-kit',
+        'firebase/app',
+        'firebase/auth',
+        'firebase/firestore',
+        'temporal-polyfill/global', 
+        'preact', 
+        '@preact/signals'
+      ]
+    },
     plugins: [
       tailwindcss(),
     ]
@@ -25,6 +38,14 @@ export default defineNuxtConfig({
      */
     componentDir: './components/ui'
   },
+  build: {
+    transpile: ['@schedule-x/vue', 
+      '@schedule-x/calendar',
+      '@schedule-x/theme-default',
+      'preact',
+      '@preact/signals'
+    ]
+  },
   runtimeConfig: {
     public: {
       firebaseApiKey: process.env.FIREBASE_API_KEY,
@@ -35,5 +56,5 @@ export default defineNuxtConfig({
       firebaseAppId: process.env.FIREBASE_APP_ID,
       firebaseMeasurementId: process.env.FIREBASE_MEASUREMENT_ID
     }
-  }  
+  }
 })

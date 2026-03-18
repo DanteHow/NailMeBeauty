@@ -54,8 +54,8 @@
                                     :model-value="value"
                                     calendar-label="Date of birth"
                                     initial-focus
-                                    :min-value="new CalendarDate(1900, 1, 1)"
-                                    :max-value="today(getLocalTimeZone())"
+                                    :min-value="today(getLocalTimeZone())"
+                                    :max-value="new CalendarDate(2100, 1, 1)"
                                     @update:model-value="(v) => {
                                         if (v) {
                                         setFieldValue('dob', v.toString())
@@ -70,31 +70,6 @@
                             </FormItem>
                         </FormField>
                         <!-- Date:Stop -->
-                        <!-- Time:Start -->
-                        <FormField v-slot="{ componentField }"  name="BookingTime">
-                            <FormItem>
-                                <FormLabel>Time: </FormLabel>
-
-                                <Select v-bind="componentField">
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select a Time"/>
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            <SelectLabel>Time 24+</SelectLabel>
-                                            <div v-for="time in times">
-                                                <SelectItem :value="time">
-                                                    {{ time }}
-                                                </SelectItem>
-                                            </div>
-                                        </SelectGroup>
-                                </SelectContent>
-                                </Select>
-                            </FormItem>
-                        </FormField>
-                        <!-- Time:Stop -->
                         <!-- Part:Start-->
                         <FormField v-slot="{ componentField }"  name="BodyPart">
                             <FormItem>
@@ -160,7 +135,7 @@ import { z } from 'zod'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
 import { FormField, FormItem, FormLabel, FormControl } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
-import { Book, CalendarIcon } from 'lucide-vue-next'
+import { CalendarIcon } from 'lucide-vue-next'
 import { Calendar } from '~/components/ui/calendar'
 import { Button } from '~/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover'
@@ -169,8 +144,8 @@ import { cn } from '~/lib/utils'
 import Default from '~/layout/default.vue'
 import Separator from '~/components/ui/separator/Separator.vue'
 import Checkbox from '~/components/ui/checkbox/Checkbox.vue'
-
-import { useBookings } from '../composables/useBookings'
+import dayjs from 'dayjs'
+import { Timestamp } from 'firebase/firestore'
 
 const loading = ref(false)
 
@@ -178,11 +153,6 @@ const df = new DateFormatter('en-US', {
   dateStyle: 'long',
 })
 
-const times = ref([
-    '0600', '0700', '0800', '0900', '1000', '1100', '1200',
-    '1300', '1400', '1500', '1600', '1700', '1800', '1900',
-    '2000', '2100', '2200', '2300'
-])
 const bodypart = ref(['Leg', 'Hand'])
 const items = [
     {
@@ -199,9 +169,6 @@ const formSchema = toTypedSchema(z.object({
   name: z.string().min(2).max(50),
   contact: z.string().min(2).max(50),
   dob: z.string().refine(v => v, { message: 'A Booking Date is required.'}),
-  BookingTime: z.string({
-    required_error: 'Please select a booking time'
-  }),
   BodyPart: z.string({
     required_error: 'Please select a part'
   }),
@@ -225,32 +192,29 @@ const value = computed({
 })
 
 const onSubmit = handleSubmit((values) => {
-    const { createBooking, refreshBookings } = useBookings()
-    const BookingList: Record<string, any> = {
+    const { writePost } = usePosts()
+    const BookingList: Omit<Post, 'id'> = {
        Name: values.name,
        Contact: values.contact,
-       Date: values.dob,
-       Time: values.BookingTime,
-       BodyParts: values.BodyPart,
-       Requirement: values.items 
+       Date: Timestamp.fromDate(dayjs(values.dob).toDate()),
+       BodyPart: values.BodyPart,
+       Requirement: values.items,
+       Status: "Pending" 
     }
     console.log(BookingList)
 
-    // const SubmitStauts = createBooking(BookingList)
     const SubmitStatus = async () => {
         try {
             loading.value = true
-            const result = await createBooking(BookingList)
-            console.log('Write Confirmed: ', result)
-            await refreshBookings()
+            const response = await writePost(BookingList)
+            console.log('Success: ', response)
         } catch (error) {
             console.error('Failed: ', error)
         } finally {
             loading.value = false
         }
     }
-
-    console.log("Submition Id: ", SubmitStatus)
+    SubmitStatus()
     
 })
 

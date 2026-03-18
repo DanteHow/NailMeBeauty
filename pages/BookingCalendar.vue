@@ -7,13 +7,9 @@
             <button @click="nextMonth" class="text-sm px-2 py-1 border rounded-md">→</button>
         </div>
         <!-- HeaderControls::End -->
-        <div v-for="booking in bookings">
-            <div>Object: {{ booking }}</div>
-            <div>id: {{ booking.id }}</div>
-        </div>
         <!-- DaysOfWeek::Start -->
         <div class="grid grid-cols-7 text-center text-sm text-muted-foreground font-medium mb-2">
-            <div v-for="(d, i) in 7" :key="i">
+            <div v-for="(i) in 7" :key="i">
                 {{ dayjs().day(i).format('ddd') }}
             </div>
         </div>
@@ -21,7 +17,7 @@
 
         <!-- MonthGrid::Start -->
         <Dialog>
-            <div class="grid grid-cols-7 gap-px bg-border border rounded overflow-hidden text-sm">
+            <div class="grid grid-cols-7 gap-px bg-border bg-white rounded overflow-hidden text-sm">
                 <Card
                     v-for="day in daysInCalendar"
                     :key="day.format('YYYY-MM-DD')"
@@ -41,16 +37,16 @@
                                     <div>
                                         {{ day.format('D') }}
                                     </div>
-                                    <div
-                                        v-if="getBookingCount(day) > 0"
-                                        class="absolute bottom-1 right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center"
-                                    >
-                                        {{ getBookingCount(day) }}
-                                    </div>
                                 </div>
                             </CardContent>
                         </div>
                     </DialogTrigger>
+                    <div
+                        v-if="displayPostCounter(day) > 0"
+                        class="absolute bottom-1 right-1 bg-green-600 text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center"
+                    >
+                        {{ displayPostCounter(day) }}
+                    </div>
                 </Card>
             </div>
             
@@ -63,7 +59,7 @@
                 <DateDialog 
                     v-if="selectedDate"
                     :date="selectedDate"
-                    :bookings="selectedDateBookings"
+                    :bookings="SelectedDatePosts || []"
                 />
                 <DialogFooter class="p-6 pt-0">
                     <DialogClose as-child>
@@ -73,6 +69,9 @@
             </DialogContent>
         </Dialog>
         <!-- MonthGrid::End -->
+         <div class="container">
+            <p><Button @click="goToRouter('/Admin')">Back To Admin Dashboard</Button></p>
+         </div>
     </div>        
         
 </template>
@@ -83,39 +82,39 @@ import dayjs from 'dayjs'
 import isToday from 'dayjs/plugin/isToday'
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
-import { useBookings } from '~/composables/useBookings'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter, DialogClose } from '~/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '~/components/ui/dialog'
 import { Button } from '~/components/ui/button'
 import DateDialog from '~/layout/DateDialog.vue'
+import { usePosts } from '../composables/Post'
+
+const { getPostsByDate, getPostsByMonth } = usePosts()
 
 dayjs.extend(isToday)
 dayjs.extend(isSameOrBefore)
 dayjs.extend(isSameOrAfter)
 
-interface Booking {
-    id: string;
-    Name: string;
-    Date: any;
-    Contact: any;
-    Time: any;
-    BodyParts: any;
-    Requirement: any;
+// ------ Router Navigation --------//
+const goToRouter = async (page: string) => {
+    await navigateTo(page, { external: true })
 }
 
 // ------ Firebase --------//
-const { getAllBookings, fetchSlot, getBookingByDate } = useBookings()
-const bookings = ref<Booking[]>([])
-
-onMounted( async () => {
-    const respone = await getAllBookings()
-    respone.forEach(list => console.log(list))
-})
-
 const today = dayjs()
 const currentMonth = ref(dayjs())
 const selectedDate = ref(dayjs())
-const selectedDateBookings = ref<any[]>([])
 
+
+// ------ Next Month Button --------//
+const nextMonth = () => {
+    currentMonth.value = currentMonth.value.add(1, 'month')
+}
+
+// ------ Previous Month Button --------//
+const prevMonth = () => {
+    currentMonth.value = currentMonth.value.subtract(1, 'month')
+}
+
+// ------ Days in Calendar Grid --------//
 const daysInCalendar = computed(() => {
     const start = currentMonth.value.startOf('month').startOf('week')
     const end = currentMonth.value.endOf('month').endOf('week')
@@ -130,35 +129,38 @@ const daysInCalendar = computed(() => {
     return days
 })
 
+// ------ Select Date and Fetch Bookings --------//
 const selectDate = async (day: dayjs.Dayjs) => {
     selectedDate.value = day
-    selectedDateBookings.value = await getBookingByDate(day)
-    selectedDateBookings.value.forEach(doc => console.log(doc))
 }
 
-const nextMonth = () => {
-    currentMonth.value = currentMonth.value.add(1, 'month')
-}
+// ------ Fetch Bookings for Selected Date --------//
+const { data: SelectedDatePosts } = await useAsyncData(
+    'bookingsByDate',
+    () => getPostsByDate(selectedDate.value),
+    {
+        watch: [selectedDate],
+        server: false
+    }
+)
 
-const prevMonth = () => {
-    currentMonth.value = currentMonth.value.subtract(1, 'month')
-}
+// ------ Get All Posts by Month --------//
+const { data: allPostsByMonth } = await useAsyncData(
+    'allBookings',
+    () => getPostsByMonth(currentMonth.value.month() + 1, currentMonth.value.year()),
+    {
+        server: false
+    }
+)
 
-const bookingsByDate = computed(() => {
-    const result: Record<string, number> = {}
-    if(!bookings.value) return result
-
-    bookings.value.forEach((booking: Booking) => {
-        const dateKey = dayjs(booking.Date).format('YYYY-MM-DD')
-        result[dateKey] = (result[dateKey] || 0) + 1
-    })
-
-    return result
+// ------ Display Booking Count for Each Day --------//
+const displayPostCounter = computed(() => (day: dayjs.Dayjs) => {
+    if (!allPostsByMonth.value) return 0
+    return allPostsByMonth.value.filter((post) => {
+        const correctDate = dayjs(post.Date.toDate()).isSame(day, 'day')
+        const correctStatus = post.Status === 'Confirmed'
+        return correctDate && correctStatus
+    }).length
 })
-
-const getBookingCount = (day: dayjs.Dayjs) => {
-    const dateKey = day.format('YYYY-MM-DD')
-    return bookingsByDate.value[dateKey] || 0
-}
 
 </script>
