@@ -15,9 +15,13 @@ export default defineNuxtConfig({
         'firebase/app',
         'firebase/auth',
         'firebase/firestore',
-        'temporal-polyfill/global', 
-        'preact', 
-        '@preact/signals'
+        'temporal-polyfill/global',
+        'preact',
+        '@preact/signals',
+        'reka-ui/date',
+        'zod',
+        '@internationalized/date',
+        '@vee-validate/zod',
       ]
     },
     plugins: [

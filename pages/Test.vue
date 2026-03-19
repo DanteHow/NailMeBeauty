@@ -1,98 +1,86 @@
+<template>
+  <div>
+    <ClientOnly>
+      <div class="m-2 p-2"><Button @click="goToRouter('/Admin')">Back To Admin Dashboard</Button></div>
+      <ScheduleXCalendar 
+        :calendar-app="calendarApp"
+      />
+    </ClientOnly>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { ScheduleXCalendar } from '@schedule-x/vue'
-import {
-  createCalendar,
-  createViewDay,
-  createViewMonthAgenda,
-  createViewMonthGrid,
-  createViewWeek,
-  viewMonthGrid,
-} from '@schedule-x/calendar'
+import { createCalendar, createViewDay, createViewMonthAgenda, createViewMonthGrid, createViewWeek, viewDay, viewMonthGrid } from '@schedule-x/calendar'
 import '@schedule-x/theme-default/dist/index.css'
 import 'temporal-polyfill/global'
-import { shallowRef } from 'vue'
+import { shallowRef, onMounted } from 'vue'
+import { getDocs, collection } from 'firebase/firestore'
+import { useNuxtApp } from '#app'
+import { mapFirestoreToScheduleX } from '../composables/ObjectFormatting'
  
 // ------ Router Navigation --------//
 const goToRouter = async (page: string) => {
     await navigateTo(`${page}`, { external: true })
 }
 
-// Do not use a ref here, as the calendar instance is not reactive, and doing so might cause issues
-// For updating events, use the events service plugin
 const calendarApp = shallowRef()
 
-onMounted(() => {
-  calendarApp.value = createCalendar({
-    selectedDate: Temporal.PlainDate.from('2025-12-19'),
-    views: [
-      createViewDay(),
-      createViewWeek(),
-      createViewMonthGrid(),
-      createViewMonthAgenda(),
-    ],
-    events: [
-      {
-        id: 1,
-        title: 'Event 1',
-        start: Temporal.PlainDate.from('2025-12-19'),
-        end: Temporal.PlainDate.from('2025-12-19'),
+onMounted( async () => { 
+  try {
+    calendarApp.value = createCalendar({
+      selectedDate: Temporal.Now.plainDateISO(),
+      views: [
+        createViewDay(),
+        createViewWeek(),
+        createViewMonthGrid(),
+        createViewMonthAgenda(),
+      ],
+      events: [],
+      locale: 'en-SG',
+      timezone: 'Asia/Singapore',
+      firstDayOfWeek: 1,
+      defaultView: viewMonthGrid.name,
+      dayBoundaries: {
+        start: '08:00',
+        end: '18:00',
       },
-      {
-        id: 1,
-        title: 'Event 1',
-        start: Temporal.PlainDate.from('2025-12-19'),
-        end: Temporal.PlainDate.from('2025-12-19'),
+      minDate: Temporal.PlainDate.from('2025-01-01'),
+      maxDate: Temporal.PlainDate.from('2040-12-31'),
+      weekOptions: {
+        gridHeight: 2500,
+        nDays: 7,
+        eventWidth: 95,
+        timeAxisFormatOptions: {
+          hour: '2-digit',
+          minute: '2-digit',
+        },
+        eventOverlap: true,
+        gridStep: 30,
       },
-      {
-        id: 1,
-        title: 'Event 1',
-        start: Temporal.PlainDate.from('2025-12-19'),
-        end: Temporal.PlainDate.from('2025-12-19'),
-      },
-      {
-        id: 1,
-        title: 'Event 1',
-        start: Temporal.PlainDate.from('2025-12-19'),
-        end: Temporal.PlainDate.from('2025-12-19'),
-      },
-    ],
-    locale: 'en-SG',
-    timezone: 'Asia/Singapore',
-    firstDayOfWeek: 1,
-    defaultView: viewMonthGrid.name,
-    dayBoundaries: {
-      start: '08:00',
-      end: '18:00',
-    },
-    minDate: Temporal.PlainDate.from('2024-01-01'),
-    maxDate: Temporal.PlainDate.from('2030-12-31'),
-    weekOptions: {
-      gridHeight: 2500,
-      nDays: 7,
-      eventWidth: 95,
-      timeAxisFormatOptions: {
-        hour: '2-digit',
-        minute: '2-digit',
-      },
-      eventOverlap: true,
-      gridStep: 30,
-    },
-  })
+      callbacks: {
+        onEventClick: (event, e) => {
+          console.log('Clicked event:', event)
+        },
+        onClickAgendaDate: (date: Temporal.PlainDate, e?: UIEvent) => {
+          console.log('Clicked agenda date:', date.toString())
+        },
+      }
+    })
+
+    const { $firebase } = useNuxtApp()
+    const querySnapshot = await getDocs(collection($firebase.firestoreDB, 'Bookings'))
+    const firestoreEvents = querySnapshot.docs.map(doc => {
+      console.log('Firestore document data:', doc.data())
+      return mapFirestoreToScheduleX({ id: doc.id, ...doc.data() })
+    })
+    calendarApp.value.events.set(firestoreEvents)
+  } catch (error) {
+    console.error('Error initializing calendar:', error)
+  }
 })
 
-
 </script>
- 
-<template>
-  <div>
-    <ClientOnly>
-      <ScheduleXCalendar 
-        :calendar-app="calendarApp"
-      />
-      <div class="m-2 p-2"><Button @click="goToRouter('/Admin')">Back To Admin Dashboard</Button></div>
-    </ClientOnly>
-  </div>
-</template>
 
 <style>
 .sx-vue-calendar-wrapper {
