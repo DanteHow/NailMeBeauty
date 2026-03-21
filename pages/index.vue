@@ -7,7 +7,7 @@
             </CardHeader>
             <Separator/>
             <CardContent>
-                <form @submit="onSubmit">
+                <form @submit.prevent="onSubmit">
                     <div class="grid items-center w-full gap-4">
                         <!-- Name:Start -->
                         <FormField v-slot="{ componentField }" name="name">

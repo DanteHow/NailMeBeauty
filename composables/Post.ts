@@ -6,7 +6,7 @@ export interface Post {
     Name: string;
     Date: Timestamp;
     Contact: string;
-    Time: string;
+    Time?: string;
     BodyPart: string;
     Requirement?: string[];
     Status: string;
