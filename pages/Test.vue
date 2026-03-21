@@ -1,17 +1,7 @@
-<template>
-  <div>
-    <ClientOnly>
-      <div class="m-2 p-2"><Button @click="goToRouter('/Admin')">Back To Admin Dashboard</Button></div>
-      <ScheduleXCalendar 
-        :calendar-app="calendarApp"
-      />
-    </ClientOnly>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ScheduleXCalendar } from '@schedule-x/vue'
 import { createCalendar, createViewDay, createViewMonthAgenda, createViewMonthGrid, createViewWeek, viewDay, viewMonthGrid } from '@schedule-x/calendar'
+import { createEventsServicePlugin } from '@schedule-x/events-service'
 import '@schedule-x/theme-default/dist/index.css'
 import 'temporal-polyfill/global'
 import { shallowRef, onMounted } from 'vue'
@@ -25,6 +15,7 @@ const goToRouter = async (page: string) => {
 }
 
 const calendarApp = shallowRef()
+const eventsService = createEventsServicePlugin()
 
 onMounted( async () => { 
   try {
@@ -36,7 +27,15 @@ onMounted( async () => {
         createViewMonthGrid(),
         createViewMonthAgenda(),
       ],
-      events: [],
+      plugins: [eventsService],
+      events: [
+        {
+          id: '1',
+          title: 'Sample Event 1',
+          start: Temporal.ZonedDateTime.from('2026-03-20T10:00:00+08:00[Asia/Singapore]'),
+          end: Temporal.ZonedDateTime.from('2026-03-20T11:00:00+08:00[Asia/Singapore]'),
+        }
+      ],
       locale: 'en-SG',
       timezone: 'Asia/Singapore',
       firstDayOfWeek: 1,
@@ -74,13 +73,26 @@ onMounted( async () => {
       console.log('Firestore document data:', doc.data())
       return mapFirestoreToScheduleX({ id: doc.id, ...doc.data() })
     })
-    calendarApp.value.events.set(firestoreEvents)
+    console.log(calendarApp.value.events)
+    console.log('Mapped Firestore events:', firestoreEvents)
+    calendarApp.value.events = firestoreEvents
   } catch (error) {
     console.error('Error initializing calendar:', error)
   }
 })
 
 </script>
+
+<template>
+  <div>
+    <ClientOnly>
+      <div class="m-2 p-2"><Button @click="goToRouter('/Admin')">Back To Admin Dashboard</Button></div>
+      <ScheduleXCalendar 
+        :calendar-app="calendarApp"
+      />
+    </ClientOnly>
+  </div>
+</template>
 
 <style>
 .sx-vue-calendar-wrapper {

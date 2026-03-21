@@ -3,6 +3,7 @@ import tailwindcss from '@tailwindcss/vite'
 console.log("process.env.FIREBASE_API_KEY")
 
 export default defineNuxtConfig({
+  ssr: false,
   compatibilityDate: '2025-05-15',
   devtools: { enabled: true },
   css: ['~/assets/css/tailwind.css'],
@@ -22,6 +23,15 @@ export default defineNuxtConfig({
         'zod',
         '@internationalized/date',
         '@vee-validate/zod',
+        'class-variance-authority',
+        'reka-ui',
+        '@vueuse/core',
+        'clsx',
+        'tailwind-merge',
+        '@schedule-x/events-service',
+        'vee-validate',
+        'lucide-vue-next',
+        'dayjs',
       ]
     },
     plugins: [
