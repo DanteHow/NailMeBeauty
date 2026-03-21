@@ -7,7 +7,7 @@
             </CardHeader>
             <Separator/>
             <CardContent>
-                <form @submit.prevent="onSubmit">
+                <form @submit.prevent>
                     <div class="grid items-center w-full gap-4">
                         <!-- Name:Start -->
                         <FormField v-slot="{ componentField }" name="name">
@@ -16,6 +16,7 @@
                                 <FormControl>
                                     <Input type="text" placeholder="Enter your name" v-bind="componentField" />
                                 </FormControl>
+                                <FormMessage />
                             </FormItem>
                         </FormField>
                         <!-- Name:Stop -->
@@ -26,6 +27,7 @@
                                 <FormControl>
                                     <Input type="text" placeholder="Enter your phone number" v-bind="componentField"/>
                                 </FormControl>
+                                <FormMessage />
                             </FormItem>
                         </FormField>
                         <!-- Contact:Stop -->
@@ -67,6 +69,7 @@
                                     />
                                 </PopoverContent>
                                 </Popover>
+                                <FormMessage />
                             </FormItem>
                         </FormField>
                         <!-- Date:Stop -->
@@ -91,6 +94,7 @@
                                         </SelectGroup>
                                 </SelectContent>
                                 </Select>
+                                <FormMessage />
                             </FormItem>
                         </FormField>
                         <!-- Part:Stop -->
@@ -106,12 +110,13 @@
                                 <FormLabel class="font-normal">
                                     {{ item.label }}
                                 </FormLabel>
+                                <FormMessage />
                             </FormItem>
                         </FormField>
-                        <!-- Checkbox:Start -->
+                        <!-- Checkbox:Stop -->
                         <!-- SubmitButton:Start -->
                         <div class="flex justify-center">
-                            <Button type="submit">
+                            <Button type="button" @click="onSubmit">
                                 Submit
                             </Button>
                         </div>
@@ -133,7 +138,7 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card'
-import { FormField, FormItem, FormLabel, FormControl } from '~/components/ui/form'
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '~/components/ui/form'
 import { Input } from '~/components/ui/input'
 import { CalendarIcon } from 'lucide-vue-next'
 import { Calendar } from '~/components/ui/calendar'
@@ -146,6 +151,7 @@ import Separator from '~/components/ui/separator/Separator.vue'
 import Checkbox from '~/components/ui/checkbox/Checkbox.vue'
 import dayjs from 'dayjs'
 import { Timestamp } from 'firebase/firestore'
+import { toast } from 'vue-sonner'
 
 const loading = ref(false)
 
@@ -178,6 +184,7 @@ const formSchema = toTypedSchema(z.object({
 }))
 
 const placeholder = ref()
+const { writePost } = usePosts()
 
 const { handleSubmit, setFieldValue, values } = useForm({
   validationSchema: formSchema,
@@ -191,31 +198,27 @@ const value = computed({
     set: val => val,
 })
 
-const onSubmit = handleSubmit((values) => {
-    const { writePost } = usePosts()
+const onSubmit = handleSubmit(async (values) => {
     const BookingList: Omit<Post, 'id'> = {
        Name: values.name,
        Contact: values.contact,
        Date: Timestamp.fromDate(dayjs(values.dob).toDate()),
        BodyPart: values.BodyPart,
        Requirement: values.items,
-       Status: "Pending" 
+       Time: '',
+       Status: "Pending"
     }
-    console.log(BookingList)
 
-    const SubmitStatus = async () => {
-        try {
-            loading.value = true
-            const response = await writePost(BookingList)
-            console.log('Success: ', response)
-        } catch (error) {
-            console.error('Failed: ', error)
-        } finally {
-            loading.value = false
-        }
+    try {
+        loading.value = true
+        const response = await writePost(BookingList)
+        toast.success('Booking submitted successfully!')
+    } catch (error) {
+        console.error('Failed: ', error)
+        toast.error('Failed to submit booking. Please try again.')
+    } finally {
+        loading.value = false
     }
-    SubmitStatus()
-    
 })
 
 </script>
